@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+venv/
+env/
+.env
+.env.*
+
+# Local data and generated outputs
+data/
+datasets/
+WAT/
+GeoTransformer/
+input_images_*/
+eval_results*/
+outputs/
+results/
+!experiments/results/
+!experiments/results/summary.csv
+runs/
+wandb/
+logs/
+*.log
+
+# Large model/checkpoint files
+model.pt
+*.pt
+*.pth
+*.pth.tar
+*.ckpt
+*.onnx
+
+# Inference artifacts
+*.npy
+*.npz
+*.ply
+*.pcd
+*.glb
+*.obj
+*.mtl
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

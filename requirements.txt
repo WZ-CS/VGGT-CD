@@ -1,0 +1,18 @@
+torch>=2.0
+torchvision>=0.15
+numpy>=1.23
+scipy>=1.10
+pillow>=9.0
+matplotlib>=3.7
+opencv-python>=4.8
+open3d>=0.18
+trimesh>=4.0
+gradio>=4.0
+huggingface-hub>=0.20
+einops>=0.7
+hydra-core>=1.3
+omegaconf>=2.3
+
+# Optional utilities under vggt/dependency may also require:
+# pycolmap
+# lightglue @ git+https://github.com/cvg/LightGlue.git
