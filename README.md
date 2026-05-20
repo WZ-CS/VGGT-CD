@@ -1,42 +1,43 @@
 # VGGT-CD
 
-[Project Page](https://YOUR_GITHUB_USERNAME.github.io/VGGT-CD/) | [Online Demo](https://huggingface.co/spaces/YOUR_HF_USERNAME/VGGT-CD)
+[Project Page](https://sumu870.github.io/VGGT-CD/) | [Repository](https://github.com/sumu870/VGGT-CD)
 
-VGGT-CD is a coarse-to-fine bi-temporal point cloud registration and change detection pipeline built on VGGT. It reconstructs two image sequences from different times, estimates a cross-time Sim(3) alignment, refines static correspondences, and exports pose/registration metrics.
+VGGT-CD is a coarse-to-fine bi-temporal point cloud registration and change detection pipeline built on VGGT. It reconstructs two image sequences from different times, aligns them with a Sim(3) transformation, refines static correspondences, and exports pose evaluation results.
 
-## What Is In This Release
+![VGGT-CD WAT Summary](docs/assets/metrics-overview.png)
 
-This folder is the clean GitHub-ready version. Large local files and paper drafts are intentionally excluded.
+## Method
 
-- Core method and improvements are kept at the repository root.
-- Experiment, baseline, evaluation, and result files are grouped under `experiments/`.
-- Website files are under `docs/` for GitHub Pages.
-- `app.py` is prepared for a Hugging Face Spaces demo link.
-- `model.pt`, datasets, generated outputs, and the ECCV PDF are not included.
+VGGT-CD addresses the coordinate and scale inconsistency between independently reconstructed T1/T2 image sequences.
 
-## Repository Layout
+1. VGGT reconstructs dense geometry, depth, confidence, and camera poses for T1 and T2.
+2. A coarse cross-time Sim(3) transform is estimated from selected keyframes.
+3. High-confidence dense points are filtered and aligned with the coarse transform.
+4. Static correspondences are refined with voxel hashing and one-shot SVD.
+5. The final alignment is saved as `fine_sim3.npz`.
+
+## Repository Structure
 
 ```text
 VGGT-CD/
-├── app.py                         # Hugging Face Spaces / Gradio demo entry
-├── IMPROVEMENTS.md                # Method contribution separated from experiments
 ├── run_inference.py               # Main VGGT-CD pipeline
-├── run_inference.sh               # Configurable shell wrapper
-├── coarse_to_fine_registration.py # Main coarse-to-fine registration improvement
-├── vggt/                          # Local VGGT model code
+├── run_inference.sh               # Shell wrapper for inference
+├── coarse_to_fine_registration.py # Core coarse-to-fine registration method
+├── IMPROVEMENTS.md                # Method details
+├── app.py                         # Gradio demo entry
+├── vggt/                          # VGGT model code
 ├── experiments/
-│   ├── baselines/                 # VGGT-only, ICP, FGR, GeoTransformer baselines
-│   ├── evaluation/                # Evaluation and timing scripts
-│   └── results/summary.csv        # Bundled experiment summary
-├── docs/                          # Static GitHub Pages website
-├── requirements.txt
-└── .github/workflows/pages.yml
+│   ├── baselines/                 # Baseline methods
+│   ├── evaluation/                # Evaluation scripts
+│   └── results/summary.csv        # Experiment summary
+├── docs/                          # GitHub Pages project site
+└── requirements.txt
 ```
 
 ## Installation
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/VGGT-CD.git
+git clone https://github.com/sumu870/VGGT-CD.git
 cd VGGT-CD
 
 python -m venv .venv
@@ -44,13 +45,11 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Place the VGGT checkpoint at `./model.pt`, or set:
+Set the VGGT checkpoint path:
 
 ```bash
 export VGGT_MODEL_PATH=/path/to/model.pt
 ```
-
-The checkpoint is intentionally ignored by git because it is too large for a normal GitHub repository.
 
 ## Data Format
 
@@ -66,7 +65,7 @@ DATA_ROOT/
         └── points3D.bin
 ```
 
-## Run VGGT-CD
+## Inference
 
 ```bash
 python run_inference.py \
@@ -80,7 +79,7 @@ python run_inference.py \
   --conf_threshold 50
 ```
 
-Or:
+Shell wrapper:
 
 ```bash
 DATA_ROOT=/path/to/WAT \
@@ -91,58 +90,46 @@ VGGT_MODEL_PATH=/path/to/model.pt \
 ./run_inference.sh
 ```
 
-## Evaluate Results
+## Evaluation
 
 ```bash
 python experiments/evaluation/eval_poses_1.py --eval_root ./eval_results
 ```
 
-Each scene output contains predicted poses, ground-truth poses, `coarse_sim3.npz`, `fine_sim3.npz`, image names, and `timing.json`.
+Scene outputs:
 
-## Experiments
+```text
+eval_results/scene_name/
+├── pred_poses_t1.npy
+├── pred_poses_t2.npy
+├── gt_poses_t1.npy
+├── gt_poses_t2.npy
+├── image_names_t1.txt
+├── image_names_t2.txt
+├── coarse_sim3.npz
+├── fine_sim3.npz
+└── timing.json
+```
 
-Baselines live in `experiments/baselines/`:
-
-| Script | Method |
-| --- | --- |
-| `run_baseline_vggt_only.py` | Independent VGGT T1/T2 inference without registration |
-| `baseline_icp.py` | VGGT point clouds plus ICP |
-| `run_baseline_fgr.py` | VGGT point clouds plus Fast Global Registration |
-| `run_baseline_global_scale_icp.py` | Global scale alignment plus ICP |
-| `run_baseline_sim3_icp.py` | Sim(3) alignment plus ICP |
-| `run_baseline_geotransformer.py` | External GeoTransformer baseline |
-
-The bundled `experiments/results/summary.csv` contains 11 WAT scenes:
+## Results
 
 | Scenes | ATE mean | ATE RMSE | RTE mean | RRE mean | Time/scene | GPU memory |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | 11 | 0.4316 | 0.4631 | 0.1933 | 0.3598 | 33.14 s | 18167.52 MB |
 
-## Website And Online Demo
+## Baselines
 
-There are two different web targets:
+| Script | Method |
+| --- | --- |
+| `experiments/baselines/run_baseline_vggt_only.py` | Independent VGGT T1/T2 inference |
+| `experiments/baselines/baseline_icp.py` | VGGT point clouds with ICP |
+| `experiments/baselines/run_baseline_fgr.py` | VGGT point clouds with Fast Global Registration |
+| `experiments/baselines/run_baseline_global_scale_icp.py` | Global scale alignment with ICP |
+| `experiments/baselines/run_baseline_sim3_icp.py` | Sim(3) alignment with ICP |
+| `experiments/baselines/run_baseline_geotransformer.py` | GeoTransformer baseline |
 
-- `docs/`: static GitHub Pages project website. It can show the method, commands, and bundled results.
-- `app.py`: Gradio app for Hugging Face Spaces or your own GPU server. This is the part that gives people a public link to try the demo.
-
-GitHub Pages cannot run Python/GPU inference. To let anyone try the effect through a website link, deploy this repository or `app.py` to Hugging Face Spaces, choose a GPU runtime, upload or mount `model.pt`, and set `VGGT_MODEL_PATH`.
-
-Run the demo locally:
+## Demo
 
 ```bash
 GRADIO_SERVER_PORT=7860 python app.py
 ```
-
-After deployment, replace the demo link at the top of this README and in `docs/index.html`.
-
-## GitHub Pages
-
-The workflow in `.github/workflows/pages.yml` publishes `docs/` automatically after pushing to `main`.
-
-When creating the GitHub repository, do not add a README, `.gitignore`, or license through the GitHub UI if you plan to upload this prepared folder. This release already includes README and `.gitignore`.
-
-## Notes Before Public Release
-
-- Replace `YOUR_GITHUB_USERNAME` and `YOUR_HF_USERNAME`.
-- Add a final license after confirming third-party VGGT licensing requirements.
-- Keep `model.pt`, datasets, generated outputs, and paper PDFs outside the git history.
