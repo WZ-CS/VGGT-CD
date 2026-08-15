@@ -23,8 +23,7 @@ jobs:
         shell: bash
         run: |
           git clone --depth 1 https://github.com/sumu870/VGGT-CD.git /tmp/vggt-cd-source
-          rsync -a --exclude '.git/' /tmp/vggt-cd-source/ ./
-          rm -f .github/workflows/import-source.yml
+          rsync -a --exclude '.git/' --exclude '.github/workflows/' /tmp/vggt-cd-source/ ./
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
