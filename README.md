@@ -1,18 +1,27 @@
-# VGGT-CD
+# VGGT-CD: Training-Free Robust Registration for 3D Change Detection
 
-[Project Page](https://sumu870.github.io/VGGT-CD/) | [Repository](https://github.com/sumu870/VGGT-CD)
+<p align="center">
+  <strong><a href="https://arxiv.org/abs/2605.16859">Paper</a></strong> |
+  <strong><a href="https://github.com/WZ-CS/VGGT-CD">Code</a></strong>
+</p>
 
-VGGT-CD is a coarse-to-fine bi-temporal point cloud registration and change detection pipeline built on VGGT. It reconstructs two image sequences from different times, aligns them with a Sim(3) transformation, refines static correspondences, and exports pose evaluation results.
+Official implementation of **VGGT-CD**, a training-free coarse-to-fine pipeline for 3D change detection from unposed multi-view images.
 
-![VGGT-CD WAT Summary](docs/assets/metrics-overview.png)
+**Abstract:** Independent reconstructions of two time epochs suffer from scale ambiguity, the registration-change paradox, and edge-flying noise. VGGT-CD uses sparse joint inference to establish a shared metric space and an initial Sim(3) prior, then refines dense reconstructions through reliability-guided purification and closed-form translation alignment. On the 11-scene World Across Time benchmark, it reduces absolute trajectory error by 44% outdoors and 59% indoors while completing registration more than 6x faster than prior baselines.
+
+<p align="center">
+  <img src="assets/vggt-cd-overview.png" alt="VGGT-CD overview" width="100%">
+</p>
+
+<p align="center"><em>Figure 1. VGGT-CD aligns independent bi-temporal reconstructions and isolates genuine 3D changes, resolving scale ambiguity, dynamic outliers, and edge noise.</em></p>
 
 ## Method
 
 VGGT-CD addresses the coordinate and scale inconsistency between independently reconstructed T1/T2 image sequences.
 
 1. VGGT reconstructs dense geometry, depth, confidence, and camera poses for T1 and T2.
-2. A coarse cross-time Sim(3) transform is estimated from selected keyframes.
-3. High-confidence dense points are filtered and aligned with the coarse transform.
+2. A sparse joint-inference stage estimates a cross-time Sim(3) transform in a unified metric space.
+3. High-confidence dense points are filtered to remove dynamic changes and edge noise.
 4. Static correspondences are refined with voxel hashing and one-shot SVD.
 5. The final alignment is saved as `fine_sim3.npz`.
 
@@ -20,24 +29,24 @@ VGGT-CD addresses the coordinate and scale inconsistency between independently r
 
 ```text
 VGGT-CD/
-├── run_inference.py               # Main VGGT-CD pipeline
-├── run_inference.sh               # Shell wrapper for inference
-├── coarse_to_fine_registration.py # Core coarse-to-fine registration method
-├── IMPROVEMENTS.md                # Method details
-├── app.py                         # Gradio demo entry
-├── vggt/                          # VGGT model code
-├── experiments/
-│   ├── baselines/                 # Baseline methods
-│   ├── evaluation/                # Evaluation scripts
-│   └── results/summary.csv        # Experiment summary
-├── docs/                          # GitHub Pages project site
-└── requirements.txt
+|- run_inference.py               # Main VGGT-CD pipeline
+|- run_inference.sh               # Shell wrapper for inference
+|- coarse_to_fine_registration.py # Core coarse-to-fine registration method
+|- IMPROVEMENTS.md                # Method details
+|- app.py                         # Gradio demo entry
+|- vggt/                          # VGGT model code
+|- experiments/
+|  |- baselines/                 # Baseline methods
+|  |- evaluation/                # Evaluation scripts
+|  `- results/summary.csv        # Experiment summary
+|- docs/                          # GitHub Pages project site
+`- requirements.txt
 ```
 
 ## Installation
 
 ```bash
-git clone https://github.com/sumu870/VGGT-CD.git
+git clone https://github.com/WZ-CS/VGGT-CD.git
 cd VGGT-CD
 
 python -m venv .venv
@@ -55,14 +64,14 @@ export VGGT_MODEL_PATH=/path/to/model.pt
 
 ```text
 DATA_ROOT/
-└── scene_name/
-    ├── images/
-    │   ├── SEQ_T1/
-    │   └── SEQ_T2/
-    └── sparse/0/
-        ├── cameras.bin
-        ├── images.bin
-        └── points3D.bin
+`- scene_name/
+    |- images/
+    |  |- SEQ_T1/
+    |  `- SEQ_T2/
+    `- sparse/0/
+        |- cameras.bin
+        |- images.bin
+        `- points3D.bin
 ```
 
 ## Inference
@@ -74,7 +83,7 @@ python run_inference.py \
   --seq_t1 IMG_9184 \
   --seq_t2 IMG_9185 \
   --output_root ./eval_results \
-  --model_path "$VGGT_MODEL_PATH" \
+  --model_path "${VGGT_MODEL_PATH}" \
   --num_keyframes 5 \
   --conf_threshold 50
 ```
@@ -100,15 +109,15 @@ Scene outputs:
 
 ```text
 eval_results/scene_name/
-├── pred_poses_t1.npy
-├── pred_poses_t2.npy
-├── gt_poses_t1.npy
-├── gt_poses_t2.npy
-├── image_names_t1.txt
-├── image_names_t2.txt
-├── coarse_sim3.npz
-├── fine_sim3.npz
-└── timing.json
+|- pred_poses_t1.npy
+|- pred_poses_t2.npy
+|- gt_poses_t1.npy
+|- gt_poses_t2.npy
+|- image_names_t1.txt
+|- image_names_t2.txt
+|- coarse_sim3.npz
+|- fine_sim3.npz
+`- timing.json
 ```
 
 ## Results
