@@ -1,4 +1,4 @@
-name: Import source repository
+name: Merge source repository history
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  import:
+  merge-history:
     runs-on: ubuntu-latest
     steps:
       - name: Check out target repository
@@ -19,13 +19,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Copy source repository contents
+      - name: Merge original Git history
         shell: bash
         run: |
-          git clone --depth 1 https://github.com/sumu870/VGGT-CD.git /tmp/vggt-cd-source
-          rsync -a --exclude '.git/' --exclude '.github/workflows/' /tmp/vggt-cd-source/ ./
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Import project contents from sumu870/VGGT-CD"
+          git remote add source https://github.com/sumu870/VGGT-CD.git
+          git fetch source main
+          git merge --allow-unrelated-histories --strategy=ours source/main -m "Merge original history from sumu870/VGGT-CD"
           git push origin main
