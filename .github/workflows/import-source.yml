@@ -1,0 +1,32 @@
+name: Import source repository
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/import-source.yml
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out target repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Copy source repository contents
+        shell: bash
+        run: |
+          git clone --depth 1 https://github.com/sumu870/VGGT-CD.git /tmp/vggt-cd-source
+          rsync -a --exclude '.git/' /tmp/vggt-cd-source/ ./
+          rm -f .github/workflows/import-source.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Import project contents from sumu870/VGGT-CD"
+          git push origin main
